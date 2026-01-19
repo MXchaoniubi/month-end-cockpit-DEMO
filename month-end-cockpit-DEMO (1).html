@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>月结驾驶舱 - DEMO</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        /* Navigation */
+        .nav {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-btn:hover {
+            background: #e0e0e0;
+            transform: translateY(-1px);
+        }
+
+        .nav-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .nav-btn.refresh {
+            margin-left: auto;
+            background: #10b981;
+            color: white;
+        }
+
+        .nav-btn.refresh:hover {
+            background: #059669;
+        }
+
+        /* Main Content */
+        .content {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            min-height: 500px;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-card.green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .stat-card.yellow {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .stat-card.red {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* Task List */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .task-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+            transform: translateX(4px);
+        }
+
+        .task-item.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .task-identifier {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 14px;
+        }
+
+        .task-name {
+            font-weight: 600;
+            font-size: 15px;
+            margin-left: 8px;
+        }
+
+        .task-status {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-completed { background: #d1fae5; color: #065f46; }
+        .status-in-progress { background: #fef3c7; color: #92400e; }
+        .status-delayed { background: #fee2e2; color: #991b1b; }
+        .status-not-started { background: #f3f4f6; color: #4b5563; }
+        .status-pending { background: #dbeafe; color: #1e40af; }
+
+        .task-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: #6b7280;
+            flex-wrap: wrap;
+        }
+
+        .task-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .critical-badge {
+            background: #ef4444;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        /* Task Detail Panel */
+        .detail-panel {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .detail-panel h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #1f2937;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .detail-section {
+            margin-bottom: 15px;
+        }
+
+        .detail-section h4 {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
+        }
+
+        .detail-label {
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .status-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .status-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .status-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-completed { background: #10b981; color: white; }
+        .btn-in-progress { background: #f59e0b; color: white; }
+        .btn-delayed { background: #ef4444; color: white; }
+        .btn-not-started { background: #6b7280; color: white; }
+
+        /* Tree View */
+        .tree {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .tree-group {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .tree-group-header {
+            background: #f9fafb;
+            padding: 12px 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+
+        .tree-group-header:hover {
+            background: #f3f4f6;
+        }
+
+        .tree-group-progress {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .tree-tasks {
+            padding: 10px;
+            background: white;
+        }
+
+        .tree-task {
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-left: 3px solid #e5e7eb;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+            border-radius: 4px;
+        }
+
+        .tree-task:hover {
+            background: #f0f4ff;
+            border-left-color: #667eea;
+        }
+
+        .tree-task.selected {
+            background: #e0e7ff;
+            border-left-color: #667eea;
+            font-weight: 600;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e5e7eb;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            margin-left: 20px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 20px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #667eea;
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px #667eea;
+        }
+
+        .timeline-item.critical::before {
+            background: #ef4444;
+            box-shadow: 0 0 0 2px #ef4444;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .timeline-time {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .timeline-bar {
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .timeline-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 3px;
+            transition: width 0.5s;
+        }
+
+        .timeline-progress.completed {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+
+        .timeline-progress.in-progress {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+
+        /* Critical Path */
+        .critical-path {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .path-step {
+            background: white;
+            border: 2px solid #ef4444;
+            border-radius: 8px;
+            padding: 15px;
+            position: relative;
+        }
+
+        .path-step::before {
+            content: '⚡';
+            position: absolute;
+            left: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #ef4444;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .path-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .path-title {
+            font-weight: 600;
+            color: #991b1b;
+        }
+
+        .path-duration {
+            font-size: 12px;
+            color: #6b7280;
+            background: #fef2f2;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .path-details {
+            font-size: 12px;
+            color: #6b7280;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .bottleneck-alert {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #92400e;
+        }
+
+        /* Loading & Empty States */
+        .loading, .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e5e7eb;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .nav {
+                flex-direction: column;
+            }
+
+            .nav-btn.refresh {
+                margin-left: 0;
+            }
+
+            .task-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .timeline-item {
+                margin-left: 10px;
+            }
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        /* Utility Classes */
+        .text-center { text-align: center; }
+        .text-sm { font-size: 12px; }
+        .text-xs { font-size: 11px; }
+        .font-bold { font-weight: bold; }
+        .mt-2 { margin-top: 8px; }
+        .mb-2 { margin-bottom: 8px; }
+        .flex { display: flex; }
+        .gap-2 { gap: 8px; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <span>📊</span>
+                月结驾驶舱 - DEMO
+            </h1>
+            <p>财务关账流程管理系统 - 交互式演示</p>
+            <span class="status-badge">🟢 系统运行中</span>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav">
+            <button class="nav-btn active" onclick="switchView('dashboard')">
+                <span>📈</span> 仪表板
+            </button>
+            <button class="nav-btn" onclick="switchView('tasks')">
+                <span>📋</span> 任务列表
+            </button>
+            <button class="nav-btn" onclick="switchView('tree')">
+                <span>🌳</span> 任务树
+            </button>
+            <button class="nav-btn" onclick="switchView('timeline')">
+                <span>⏰</span> 时间线
+            </button>
+            <button class="nav-btn" onclick="switchView('critical-path')">
+                <span>⚡</span> 关键路径
+            </button>
+            <button class="nav-btn refresh" onclick="refreshData()">
+                <span>🔄</span> 刷新数据
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content" id="main-content">
+            <!-- Content will be dynamically loaded here -->
+        </div>
+    </div>
+
+    <script>
+        // 模拟数据
+        const mockData = {
+            taskGroups: [
+                {
+                    id: 'group-1',
+                    name: '1账期开关',
+                    description: '月结账期开关管理',
+                    totalTasks: 5,
+                    completedTasks: 3,
+                    criticalTasks: 3,
+                    tasks: [
+                        {
+                            id: 'task-1-3',
+                            taskIdentifier: '1 3',
+                            name: '月结通知发布',
+                            description: '月结通知发布',
+                            status: 'completed',
+                            type: 'transaction',
+                            priority: 'high',
+                            isCriticalPath: true,
+                            plannedStartTime: '2025-06-30T00:00:00',
+                            plannedEndTime: '2025-06-30T00:00:00',
+                            actualStartTime: '2025-07-15T16:38:12',
+                            actualEndTime: '2025-07-15T16:38:35',
+                            actualDuration: '00:00:23',
+                            transactionCode: 'SM02',
+                            organizationType: '文件夹'
+                        },
+                        {
+                            id: 'task-1-4',
+                            taskIdentifier: '1 4',
+                            name: '总账账期打开',
+                            description: '总账账期打开',
+                            status: 'completed',
+                            type: 'transaction',
+                            priority: 'high',
+                            isCriticalPath: true,
+                            plannedStartTime: '2025-06-30T00:00:00',
+                            plannedEndTime: '2025-06-30T00:00:00',
+                            actualStartTime: '2025-07-15T16:38:12',
+                            actualEndTime: '2025-07-15T16:38:35',
+                            actualDuration: '00:00:23',
+                            transactionCode: 'SM02',
+                            organizationType: '文件夹'
+                        },
+                        {
+                            id: 'task-1-5',
+                            taskIdentifier: '1 5',
+                            name: '物料账期打开',
+                            description: '物料账期打开',
+                            status: 'completed',
+                            type: 'transaction',
+                            priority: 'high',
+                            isCriticalPath: true,
+                            plannedStartTime: '2025-06-30T00:00:00',
+                            plannedEndTime: '2025-06-30T00:00:00',
+                            actualStartTime: '2025-07-15T16:38:12',
+                            actualEndTime: '2025-07-15T16:38:35',
+                            actualDuration: '00:00:23',
+                            transactionCode: 'SM02',
+                            organizationType: '文件夹'
+                        },
+                        {
+                            id: 'task-1-6',
+                            taskIdentifier: '1 6',
+                            name: '折旧计提',
+                            description: '折旧计提',
+                            status: 'pending',
+                            type: 'transaction',
+                            priority: 'medium',
+                            isCriticalPath: false,
+                            plannedStartTime: '2025-06-30T00:00:00',
+                            plannedEndTime: '2025-06-30T00:00:00',
+                            transactionCode: 'SM02',
+                            organizationType: '文件夹'
+                        },
+                        {
+                            id: 'task-1-8',
+                            taskIdentifier: '1 8',
+                            name: '外币评估',
+                            description: '外币评估',
+                            status: 'not_started',
+                            type: 'transaction',
+                            priority: 'medium',
+                            isCriticalPath: false,
+                            plannedStartTime: '2025-06-30T00:00:00',
+                            plannedEndTime: '2025-06-30T00:00:00',
+                            transactionCode: 'SM02',
+                            organizationType: '文件夹'
+                        }
+                    ]
+                },
+                {
+                    id: 'group-2',
+                    name: '2收入关账',
+                    description: '收入确认和关账流程',
+                    totalTasks: 4,
+                    completedTasks: 2,
+                    criticalTasks: 2,
+                    tasks: [
+                        {
+                            id: 'task-2-1',
+                            taskIdentifier: '2 1',
+                            name: '收入预提',
+                            description: '收入预提处理',
+                            status: 'completed',
+                            type: 'transaction',
+                            priority: 'high',
+                            isCriticalPath: true,
+                            plannedStartTime: '2025-07-01T00:00:00',
+                            plannedEndTime: '2025-07-01T12:00:00',
+                            actualStartTime: '2025-07-01T08:00:00',
+                            actualEndTime: '2025-07-01T11:30:00',
+                            actualDuration: '03:30:00',
+                            transactionCode: 'FB50',
+                            organizationType: '财务部',
+                            ownerName: '张会计'
+                        },
+                        {
+                            id: 'task-2-2',
+                            taskIdentifier: '2 2',
+                            name: '收入确认',
+                            description: '收入确认处理',
+                            status: 'completed',
+                            type: 'transaction',
+                            priority: 'high',
+                            isCriticalPath: true,
+                            plannedStartTime: '2025-07-01T12:00:00',
+                            plannedEndTime: '2025-07-01T18:00:00',
+                            actualStartTime: '2025-07-01T11:30:00',
+                            actualEndTime: '2025-07-01T17:45:00',
+                            actualDuration: '06:15:00',
+                            transactionCode: 'VF01',
+                            organizationType: '财务部',
+                            ownerName: '李会计'
+                        },
+                        {
+                            id: 'task-2-3',
+                            taskIdentifier: '2 3',
+                            name: '应收账款核对',
+                            description: '应收账款对账',
+                            status: 'in_progress',
+                            type: 'report',
+                            priority: 'medium',
+                            isCriticalPath: false,
+                            plannedStartTime: '2025-07-02T00:00:00',
+                            plannedEndTime: '2025-07-02T12:00:00',
+                            transactionCode: 'FBL5N',
+                            organizationType: '财务部',
+                            ownerName: '王会计'
+                        },
+                        {
+                            id: 'task-2-4',
+                            taskIdentifier: '2 4',
+                            name: '收入报表生成',
+                            description: '收入报表生成',
+                            status: 'not_started',
+                            type: 'report',
+                            priority: 'medium',
+                            isCriticalPath: false,
+                            plannedStartTime: '2025-07-02T12:00:00',
+                            plannedEndTime: '2025-07-02T18:00:00',
+                            transactionCode: 'S_ALR_87012993',
+                            organizationType: '财务部',
+                            ownerName: '王会计'
+                        }
+                    ]
+                },
+                {
+                    id: 'group-3',
+                    name: '3成本关账',
+                    description: '成本核算和关账流程',
+                    totalTasks: 3,
+                    completedTasks: 1,
+                    criticalTasks: 2,
+                    tasks: [
+                        {
+                            id: 'task-3-1',
+                            taskIdentifier: '3 1',
+                            name: '成本预提',
+                            description: '成本预提处理',
+                            status: 'completed',
+                            type: 'transaction',
+                            priority: 'high',
+                            isCriticalPath: true,
+                            plannedStartTime: '2025-07-03T00:00:00',
+                            plannedEndTime: '2025-07-03T12:00:00',
+                            actualStartTime: '2025-07-03T08:00:00',
+                            actualEndTime: '2025-07-03T11:00:00',
+                            actualDuration: '03:00:00',
+                            transactionCode: 'FB50',
+                            organizationType: '财务部',
+                            ownerName: '赵会计'
+                        },
+                        {
+                            id: 'task-3-2',
+                            taskIdentifier: '3 2',
+                            name: '成本分摊',
+                            description: '成本分摊处理',
+                            status: 'in_progress',
+                            type: 'transaction',
+                            priority: 'high',
+                            isCriticalPath: true,
+                            plannedStartTime: '2025-07-03T12:00:00',
+                            plannedEndTime: '2025-07-04T18:00:00',
+                            transactionCode: 'KSU5',
+                            organizationType: '财务部',
+                            ownerName: '钱会计'
+                        },
+                        {
+                            id: 'task-3-3',
+                            taskIdentifier: '3 3',
+                            name: '成本报表',
+                            description: '成本报表生成',
+                            status: 'not_started',
+                            type: 'report',
+                            priority: 'medium',
+                            isCriticalPath: false,
+                            plannedStartTime: '2025-07-04T18:00:00',
+                            plannedEndTime: '2025-07-05T12:00:00',
+                            transactionCode: 'S_ALR_87013611',
+                            organizationType: '财务部',
+                            ownerName: '钱会计'
+                        }
+                    ]
+                }
+            ],
+            dashboardStats: {
+                totalTasks: 12,
+                completedTasks: 6,
+                inProgressTasks: 2,
+                delayedTasks: 0,
+                criticalTasks: 5,
+                completionRate: 50.0,
+                onTimeRate: 66.7,
+                overdueTasks: 0,
+                totalPlannedHours: 72,
+                totalActualHours: 12.5,
+                varianceHours: -59.5,
+                byGroup: [
+                    { groupId: 'group-1', groupName: '1账期开关', completed: 3, total: 5, rate: 60 },
+                    { groupId: 'group-2', groupName: '2收入关账', completed: 2, total: 4, rate: 50 },
+                    { groupId: 'group-3', groupName: '3成本关账', completed: 1, total: 3, rate: 33.3 }
+                ]
+            },
+            timeline: [
+                {
+                    taskId: 'task-1-3',
+                    taskName: '1 3 月结通知发布',
+                    startTime: '2025-06-30T00:00:00',
+                    endTime: '2025-06-30T00:00:00',
+                    status: 'completed',
+                    isCritical: true,
+                    group: '1账期开关'
+                },
+                {
+                    taskId: 'task-2-1',
+                    taskName: '2 1 收入预提',
+                    startTime: '2025-07-01T00:00:00',
+                    endTime: '2025-07-01T12:00:00',
+                    status: 'completed',
+                    isCritical: true,
+                    group: '2收入关账'
+                },
+                {
+                    taskId: 'task-2-3',
+                    taskName: '2 3 应收账款核对',
+                    startTime: '2025-07-02T00:00:00',
+                    endTime: '2025-07-02T12:00:00',
+                    status: 'in_progress',
+                    isCritical: false,
+                    group: '2收入关账'
+                },
+                {
+                    taskId: 'task-3-2',
+                    taskName: '3 2 成本分摊',
+                    startTime: '2025-07-03T12:00:00',
+                    endTime: '2025-07-04T18:00:00',
+                    status: 'in_progress',
+                    isCritical: true,
+                    group: '3成本关账'
+                }
+            ],
+            criticalPath: {
+                criticalPath: ['task-1-3', 'task-1-4', 'task-1-5', 'task-2-1', 'task-2-2', 'task-3-1', 'task-3-2'],
+                totalDuration: 120,
+                tasks: [
+                    {
+                        id: 'task-1-3',
+                        taskIdentifier: '1 3',
+                        name: '月结通知发布',
+                        status: 'completed',
+                        plannedStartTime: '2025-06-30T00:00:00',
+                        plannedEndTime: '2025-06-30T00:00:00',
+                        actualStartTime: '2025-07-15T16:38:12',
+                        actualEndTime: '2025-07-15T16:38:35'
+                    },
+                    {
+                        id: 'task-2-1',
+                        taskIdentifier: '2 1',
+                        name: '收入预提',
+                        status: 'completed',
+                        plannedStartTime: '2025-07-01T00:00:00',
+                        plannedEndTime: '2025-07-01T12:00:00',
+                        actualStartTime: '2025-07-01T08:00:00',
+                        actualEndTime: '2025-07-01T11:30:00'
+                    },
+                    {
+                        id: 'task-3-2',
+                        taskIdentifier: '3 2',
+                        name: '成本分摊',
+                        status: 'in_progress',
+                        plannedStartTime: '2025-07-03T12:00:00',
+                        plannedEndTime: '2025-07-04T18:00:00'
+                    }
+                ],
+                bottlenecks: []
+            }
+        };
+
+        // 当前状态
+        let currentView = 'dashboard';
+        let selectedTask = null;
+        let data = JSON.parse(JSON.stringify(mockData)); // 深拷贝
+
+        // 视图切换
+        function switchView(view) {
+            currentView = view;
+            
+            // 更新导航按钮状态
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.nav-btn').classList.add('active');
+            
+            renderContent();
+        }
+
+        // 渲染内容
+        function renderContent() {
+            const content = document.getElementById('main-content');
+            
+            switch(currentView) {
+                case 'dashboard':
+                    content.innerHTML = renderDashboard();
+                    break;
+                case 'tasks':
+                    content.innerHTML = renderTaskList();
+                    break;
+                case 'tree':
+                    content.innerHTML = renderTaskTree();
+                    break;
+                case 'timeline':
+                    content.innerHTML = renderTimeline();
+                    break;
+                case 'critical-path':
+                    content.innerHTML = renderCriticalPath();
+                    break;
+            }
+            
+            // 添加动画
+            content.querySelector('.animate')?.classList.add('animate');
+        }
+
+        // 渲染仪表板
+        function renderDashboard() {
+            const stats = data.dashboardStats;
+            return `
+                <div class="animate">
+                    <div class="dashboard">
+                        <div class="stat-card">
+                            <h3>总任务数</h3>
+                            <div class="value">${stats.totalTasks}</div>
+                            <div class="label">个任务需要完成</div>
+                        </div>
+                        <div class="stat-card green">
+                            <h3>已完成</h3>
+                            <div class="value">${stats.completedTasks}</div>
+                            <div class="label">完成率 ${stats.completionRate.toFixed(1)}%</div>
+                        </div>
+                        <div class="stat-card yellow">
+                            <h3>进行中</h3>
+                            <div class="value">${stats.inProgressTasks}</div>
+                            <div class="label">正在执行</div>
+                        </div>
+                        <div class="stat-card red">
+                            <h3>关键任务</h3>
+                            <div class="value">${stats.criticalTasks}</div>
+                            <div class="label">影响整体进度</div>
+                        </div>
+                    </div>
+
+                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                        <h3 style="margin-bottom: 15px; font-size: 16px;">📊 按组统计</h3>
+                        ${stats.byGroup.map(group => `
+                            <div style="margin-bottom: 15px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px;">
+                                    <span style="font-weight: 600;">${group.groupName}</span>
+                                    <span style="color: #6b7280;">${group.completed}/${group.total} (${group.rate.toFixed(1)}%)</span>
+                                </div>
+                                <div style="height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                                    <div style="height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); width: ${group.rate}%; transition: width 0.5s;"></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div style="background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 15px; margin-top: 20px; display: flex; gap: 10px; align-items: center;">
+                        <span style="font-size: 20px;">💡</span>
+                        <div>
+                            <div style="font-weight: 600; color: #92400e; margin-bottom: 4px;">提示</div>
+                            <div style="font-size: 13px; color: #78350f;">
+                                当前进度 50%，关键路径正常。点击"任务列表"查看详细任务信息，或切换到"关键路径"视图分析瓶颈。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 渲染任务列表
+        function renderTaskList() {
+            const allTasks = [];
+            data.taskGroups.forEach(group => {
+                if (group.tasks) {
+                    group.tasks.forEach(task => {
+                        allTasks.push({ ...task, groupName: group.name });
+                    });
+                }
+            });
+
+            return `
+                <div class="animate" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                    <div>
+                        <h3 style="margin-bottom: 15px; font-size: 16px;">📋 任务列表 (${allTasks.length})</h3>
+                        <div class="task-list">
+                            ${allTasks.map(task => `
+                                <div class="task-item ${selectedTask?.id === task.id ? 'selected' : ''}" onclick="selectTask('${task.id}')">
+                                    <div class="task-header">
+                                        <div>
+                                            <span class="task-identifier">${task.taskIdentifier}</span>
+                                            <span class="task-name">${task.name}</span>
+                                            ${task.isCriticalPath ? '<span class="critical-badge">关键</span>' : ''}
+                                        </div>
+                                        <span class="task-status status-${task.status}">${getStatusText(task.status)}</span>
+                                    </div>
+                                    <div class="task-meta">
+                                        <span>📁 ${task.groupName}</span>
+                                        <span>🎯 ${task.priority === 'high' ? '高' : task.priority === 'medium' ? '中' : '低'}优先级</span>
+                                        ${task.ownerName ? `<span>👤 ${task.ownerName}</span>` : ''}
+                                        ${task.transactionCode ? `<span>🔧 ${task.transactionCode}</span>` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div>
+                        ${selectedTask ? renderTaskDetail(selectedTask) : '<div class="empty">选择一个任务查看详情</div>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 渲染任务详情
+        function renderTaskDetail(task) {
+            const group = data.taskGroups.find(g => g.tasks?.some(t => t.id === task.id));
+            return `
+                <div class="detail-panel animate">
+                    <h3>📋 任务详情</h3>
+                    
+                    <div class="detail-section">
+                        <h4>基本信息</h4>
+                        <div class="detail-row">
+                            <span class="detail-label">任务标识</span>
+                            <span class="detail-value">${task.taskIdentifier}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">任务名称</span>
+                            <span class="detail-value">${task.name}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">所属组</span>
+                            <span class="detail-value">${group?.name || '-'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">状态</span>
+                            <span class="detail-value status-${task.status}" style="padding: 2px 8px; border-radius: 4px;">${getStatusText(task.status)}</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>时间信息</h4>
+                        <div class="detail-row">
+                            <span class="detail-label">计划开始</span>
+                            <span class="detail-value">${formatDate(task.plannedStartTime)}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">计划结束</span>
+                            <span class="detail-value">${formatDate(task.plannedEndTime)}</span>
+                        </div>
+                        ${task.actualStartTime ? `
+                            <div class="detail-row">
+                                <span class="detail-label">实际开始</span>
+                                <span class="detail-value">${formatDate(task.actualStartTime)}</span>
+                            </div>
+                        ` : ''}
+                        ${task.actualEndTime ? `
+                            <div class="detail-row">
+                                <span class="detail-label">实际结束</span>
+                                <span class="detail-value">${formatDate(task.actualEndTime)}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">实际耗时</span>
+                                <span class="detail-value">${task.actualDuration}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>任务属性</h4>
+                        <div class="detail-row">
+                            <span class="detail-label">任务类型</span>
+                            <span class="detail-value">${task.type === 'transaction' ? '事务型' : task.type === 'report' ? '报告型' : task.type}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">优先级</span>
+                            <span class="detail-value">${task.priority === 'high' ? '高' : task.priority === 'medium' ? '中' : '低'}</span>
+                        </div>
+                        ${task.transactionCode ? `
+                            <div class="detail-row">
+                                <span class="detail-label">事务代码</span>
+                                <span class="detail-value">${task.transactionCode}</span>
+                            </div>
+                        ` : ''}
+                        ${task.ownerName ? `
+                            <div class="detail-row">
+                                <span class="detail-label">负责人</span>
+                                <span class="detail-value">${task.ownerName}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>操作</h4>
+                        <div class="status-buttons">
+                            <button class="status-btn btn-completed" onclick="updateStatus('${task.id}', 'completed')">✅ 完成</button>
+                            <button class="status-btn btn-in-progress" onclick="updateStatus('${task.id}', 'in_progress')">⏳ 进行中</button>
+                            <button class="status-btn btn-delayed" onclick="updateStatus('${task.id}', 'delayed')">⚠️ 延期</button>
+                            <button class="status-btn btn-not-started" onclick="updateStatus('${task.id}', 'not_started')">⭕ 未开始</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 渲染任务树
+        function renderTaskTree() {
+            return `
+                <div class="animate" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h3 style="margin-bottom: 15px; font-size: 16px;">🌳 任务树结构</h3>
+                        <div class="tree">
+                            ${data.taskGroups.map(group => `
+                                <div class="tree-group">
+                                    <div class="tree-group-header" onclick="selectGroup('${group.id}')">
+                                        <span>${group.name}</span>
+                                        <span class="tree-group-progress">${group.completedTasks}/${group.totalTasks}</span>
+                                    </div>
+                                    <div class="tree-tasks">
+                                        ${group.tasks?.map(task => `
+                                            <div class="tree-task ${selectedTask?.id === task.id ? 'selected' : ''}" onclick="selectTask('${task.id}')">
+                                                <span style="color: ${task.isCriticalPath ? '#ef4444' : '#6b7280'}; font-weight: ${task.isCriticalPath ? 'bold' : 'normal'};">
+                                                    ${task.taskIdentifier} ${task.name}
+                                                </span>
+                                                <span style="float: right; font-size: 11px; color: #9ca3af;">
+                                                    ${getStatusText(task.status)}
+                                                </span>
+                                            </div>
+                                        `).join('') || '<div style="padding: 10px; color: #9ca3af; font-size: 12px;">暂无任务</div>'}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div>
+                        ${selectedTask ? renderTaskDetail(selectedTask) : '<div class="empty">在左侧选择一个任务查看详情</div>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 渲染时间线
+        function renderTimeline() {
+            return `
+                <div class="animate">
+                    <h3 style="margin-bottom: 15px; font-size: 16px;">⏰ 任务时间线</h3>
+                    <div class="timeline">
+                        ${data.timeline.map(item => `
+                            <div class="timeline-item ${item.isCritical ? 'critical' : ''}">
+                                <div class="timeline-header">
+                                    <div class="timeline-title">
+                                        ${item.taskName}
+                                        ${item.isCritical ? '<span class="critical-badge" style="margin-left: 8px;">关键路径</span>' : ''}
+                                    </div>
+                                    <div class="timeline-time">${item.group}</div>
+                                </div>
+                                <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                                    ${formatDate(item.startTime)} - ${formatDate(item.endTime)}
+                                </div>
+                                <div class="timeline-bar">
+                                    <div class="timeline-progress ${item.status === 'completed' ? 'completed' : item.status === 'in_progress' ? 'in-progress' : ''}" 
+                                         style="width: ${item.status === 'completed' ? '100%' : item.status === 'in_progress' ? '60%' : '0%'}">
+                                    </div>
+                                </div>
+                                <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">
+                                    状态: ${getStatusText(item.status)}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 渲染关键路径
+        function renderCriticalPath() {
+            const cp = data.criticalPath;
+            return `
+                <div class="animate">
+                    <h3 style="margin-bottom: 15px; font-size: 16px;">⚡ 关键路径分析</h3>
+                    
+                    <div style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-size: 12px; color: #0369a1; margin-bottom: 4px;">关键路径总时长</div>
+                                <div style="font-size: 24px; font-weight: bold; color: #0c4a6e;">${cp.totalDuration} 小时</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 12px; color: #0369a1; margin-bottom: 4px;">关键任务数</div>
+                                <div style="font-size: 24px; font-weight: bold; color: #0c4a6e;">${cp.criticalPath.length}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="critical-path">
+                        ${cp.tasks.map((task, index) => `
+                            <div class="path-step">
+                                <div class="path-header">
+                                    <div class="path-title">${task.taskIdentifier} ${task.name}</div>
+                                    <div class="path-duration">${task.actualDuration || '进行中'}</div>
+                                </div>
+                                <div class="path-details">
+                                    <span>📅 ${formatDate(task.plannedStartTime)} → ${formatDate(task.plannedEndTime)}</span>
+                                    <span>📊 ${getStatusText(task.status)}</span>
+                                    ${task.actualStartTime ? `<span>⏱️ 实际: ${formatDate(task.actualStartTime)}</span>` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    ${cp.bottlenecks.length > 0 ? `
+                        <div class="bottleneck-alert">
+                            <span style="font-size: 18px;">⚠️</span>
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 2px;">发现瓶颈任务</div>
+                                <div style="font-size: 12px;">${cp.bottlenecks.join(', ')}</div>
+                            </div>
+                        </div>
+                    ` : `
+                        <div style="background: #d1fae5; border: 1px solid #10b981; border-radius: 8px; padding: 12px; margin-top: 15px; display: flex; gap: 8px; align-items: center;">
+                            <span style="font-size: 18px;">✅</span>
+                            <div style="font-size: 13px; color: #065f46;">
+                                关键路径运行正常，暂无瓶颈任务
+                            </div>
+                        </div>
+                    `}
+
+                    <div style="background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 15px; margin-top: 20px; display: flex; gap: 10px;">
+                        <span style="font-size: 18px;">💡</span>
+                        <div style="font-size: 13px; color: #78350f;">
+                            <strong>关键路径</strong> 是影响整体项目进度的最长路径。这些任务的延迟会直接影响月结完成时间。建议优先关注这些任务的执行情况。
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 选择任务
+        function selectTask(taskId) {
+            const allTasks = [];
+            data.taskGroups.forEach(group => {
+                if (group.tasks) {
+                    group.tasks.forEach(task => {
+                        allTasks.push({ ...task, groupName: group.name });
+                    });
+                }
+            });
+            
+            selectedTask = allTasks.find(t => t.id === taskId);
+            
+            if (currentView === 'tasks' || currentView === 'tree') {
+                renderContent();
+            }
+        }
+
+        // 选择组
+        function selectGroup(groupId) {
+            const group = data.taskGroups.find(g => g.id === groupId);
+            if (group && group.tasks && group.tasks.length > 0) {
+                selectTask(group.tasks[0].id);
+            }
+        }
+
+        // 更新状态
+        function updateStatus(taskId, newStatus) {
+            // 查找并更新任务
+            for (let group of data.taskGroups) {
+                if (group.tasks) {
+                    const task = group.tasks.find(t => t.id === taskId);
+                    if (task) {
+                        task.status = newStatus;
+                        
+                        // 更新实际时间
+                        if (newStatus === 'in_progress' && !task.actualStartTime) {
+                            task.actualStartTime = new Date().toISOString();
+                        } else if (newStatus === 'completed') {
+                            task.actualEndTime = new Date().toISOString();
+                            if (task.actualStartTime) {
+                                const duration = new Date(task.actualEndTime) - new Date(task.actualStartTime);
+                                const hours = Math.floor(duration / (1000 * 60 * 60));
+                                const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+                                const seconds = Math.floor((duration % (1000 * 60)) / 1000);
+                                task.actualDuration = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                            }
+                        }
+                        
+                        // 更新组统计
+                        group.completedTasks = group.tasks.filter(t => t.status === 'completed').length;
+                        group.totalTasks = group.tasks.length;
+                        
+                        // 更新选中的任务
+                        if (selectedTask && selectedTask.id === taskId) {
+                            selectedTask = { ...task, groupName: group.name };
+                        }
+                        
+                        break;
+                    }
+                }
+            }
+            
+            // 更新仪表板统计
+            updateDashboardStats();
+            
+            // 重新渲染
+            renderContent();
+            
+            // 显示提示
+            showNotification(`任务状态已更新为: ${getStatusText(newStatus)}`);
+        }
+
+        // 更新仪表板统计
+        function updateDashboardStats() {
+            let totalTasks = 0;
+            let completedTasks = 0;
+            let inProgressTasks = 0;
+            let delayedTasks = 0;
+            let criticalTasks = 0;
+
+            data.taskGroups.forEach(group => {
+                totalTasks += group.totalTasks;
+                completedTasks += group.completedTasks;
+                
+                if (group.tasks) {
+                    group.tasks.forEach(task => {
+                        if (task.status === 'in_progress') inProgressTasks++;
+                        if (task.status === 'delayed') delayedTasks++;
+                        if (task.isCriticalPath) criticalTasks++;
+                    });
+                }
+            });
+
+            data.dashboardStats = {
+                totalTasks,
+                completedTasks,
+                inProgressTasks,
+                delayedTasks,
+                criticalTasks,
+                completionRate: totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0,
+                onTimeRate: totalTasks > 0 ? ((completedTasks + inProgressTasks) / totalTasks) * 100 : 0,
+                overdueTasks: delayedTasks,
+                totalPlannedHours: 72,
+                totalActualHours: 12.5,
+                varianceHours: -59.5,
+                byGroup: data.taskGroups.map(group => ({
+                    groupId: group.id,
+                    groupName: group.name,
+                    completed: group.completedTasks,
+                    total: group.totalTasks,
+                    rate: group.totalTasks > 0 ? (group.completedTasks / group.totalTasks) * 100 : 0
+                }))
+            };
+        }
+
+        // 刷新数据
+        function refreshData() {
+            const btn = event.target.closest('.nav-btn.refresh');
+            btn.innerHTML = '<span class="animate-spin">🔄</span> 刷新中...';
+            
+            setTimeout(() => {
+                // 重置为原始数据
+                data = JSON.parse(JSON.stringify(mockData));
+                selectedTask = null;
+                renderContent();
+                btn.innerHTML = '<span>🔄</span> 刷新数据';
+                showNotification('数据已刷新');
+            }, 800);
+        }
+
+        // 工具函数
+        function getStatusText(status) {
+            const map = {
+                'completed': '已完成',
+                'in_progress': '进行中',
+                'delayed': '延期',
+                'not_started': '未开始',
+                'pending': '待确认'
+            };
+            return map[status] || status;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${month}/${day} ${hours}:${minutes}`;
+        }
+
+        function showNotification(message) {
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #10b981;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 1000;
+                font-size: 14px;
+                animation: slideIn 0.3s ease-out;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 2000);
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            renderContent();
+            console.log('🚀 月结驾驶舱 DEMO 已加载');
+            console.log('💡 提示: 尝试点击不同视图按钮，选择任务，更新状态，体验完整功能！');
+        });
+    </script>
+</body>
+</html>
